@@ -69,6 +69,17 @@ class ChatViewModel : ViewModel() {
         
         val currentState = _chatState.value
         
+        // Проверяем общий размер запроса перед отправкой
+        val estimatedTokens = estimateTokens(text, currentState.attachedFileContent)
+        val maxTokens = 6000 // Безопасный лимит для YandexGPT
+        
+        if (estimatedTokens > maxTokens) {
+            _chatState.value = currentState.copy(
+                error = "Запрос слишком большой (примерно $estimatedTokens токенов). Максимум: $maxTokens токенов. Попробуйте сократить описание или выбрать меньший файл."
+            )
+            return
+        }
+        
         // Добавляем сообщение пользователя
         val userMessage = Message(
             role = MessageRole.USER,
@@ -135,6 +146,13 @@ class ChatViewModel : ViewModel() {
     }
     
     /**
+     * Устанавливает ошибку
+     */
+    fun setError(message: String) {
+        _chatState.value = _chatState.value.copy(error = message)
+    }
+    
+    /**
      * Подготавливает сообщения для отправки в API
      */
     private fun prepareApiMessages(
@@ -174,5 +192,17 @@ class ChatViewModel : ViewModel() {
         }
         
         return apiMessages
+    }
+    
+    /**
+     * Оценивает количество токенов в тексте
+     * Примерное соотношение: 1 токен ≈ 4 символа для русского/английского текста
+     */
+    private fun estimateTokens(userText: String, fileContent: String?): Int {
+        val systemPromptTokens = 200 // Примерный размер системного промпта
+        val userTextTokens = (userText.length / 4.0).toInt()
+        val fileContentTokens = if (fileContent != null) (fileContent.length / 4.0).toInt() else 0
+        
+        return systemPromptTokens + userTextTokens + fileContentTokens
     }
 }

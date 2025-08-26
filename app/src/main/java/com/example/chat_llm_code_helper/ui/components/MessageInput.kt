@@ -56,17 +56,17 @@ fun MessageInput(
                 )
             }
         }
-        
+
         // Поле ввода сообщения
         OutlinedTextField(
             value = messageText,
             onValueChange = { messageText = it },
-            placeholder = { 
+            placeholder = {
                 Text(
                     text = if (currentMode == ChatMode.BUG_FIX) {
-                        "Опишите проблему в коде..."
+                        "Опишите баг"
                     } else {
-                        "Введите сообщение..."
+                        "Введите сообщение"
                     }
                 )
             },

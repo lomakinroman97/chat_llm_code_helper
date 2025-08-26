@@ -38,7 +38,7 @@ fun ModeSelector(
                 colors = RadioButtonDefaults.colors()
             )
             Text(
-                text = "Свободный чат",
+                text = "free",
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -52,7 +52,7 @@ fun ModeSelector(
                 colors = RadioButtonDefaults.colors()
             )
             Text(
-                text = "Режим фикса багов",
+                text = "bugfix",
                 modifier = Modifier.padding(start = 8.dp)
             )
         }

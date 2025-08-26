@@ -38,7 +38,14 @@ class GptRepository {
                 Result.failure(Exception("Пустой ответ от API"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            val errorMessage = when {
+                e.message?.contains("401") == true -> "Ошибка авторизации (401). Проверьте API ключ."
+                e.message?.contains("403") == true -> "Доступ запрещен (403). Проверьте права доступа."
+                e.message?.contains("429") == true -> "Превышен лимит запросов (429). Попробуйте позже."
+                e.message?.contains("500") == true -> "Ошибка сервера (500). Попробуйте позже."
+                else -> "Ошибка сети: ${e.message}"
+            }
+            Result.failure(Exception(errorMessage))
         }
     }
 }
