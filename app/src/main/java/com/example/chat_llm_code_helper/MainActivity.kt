@@ -17,7 +17,6 @@ import com.example.chat_llm_code_helper.ui.viewmodel.ChatViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             Chat_llm_code_helperTheme {
                 Surface(

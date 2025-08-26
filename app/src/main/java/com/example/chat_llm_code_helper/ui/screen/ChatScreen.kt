@@ -43,19 +43,12 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val context = LocalContext.current
     
-    // Launcher для выбора файла
+    // Launcher для выбора файла (только текстовые файлы)
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { fileUri ->
             try {
-                val inputStream = context.contentResolver.openInputStream(fileUri)
-                val content = inputStream?.use { stream ->
-                    BufferedReader(InputStreamReader(stream)).use { reader ->
-                        reader.readText()
-                    }
-                } ?: ""
-                
                 val fileName = context.contentResolver.query(
                     fileUri, null, null, null, null
                 )?.use { cursor ->
@@ -65,9 +58,44 @@ fun ChatScreen(
                     } else null
                 } ?: "unknown_file"
                 
+                // Проверяем расширение файла
+                val fileExtension = fileName.substringAfterLast('.', "").lowercase()
+                val supportedExtensions = listOf(
+                    "kt", "java", "py", "js", "ts", "jsx", "tsx", "cpp", "c", "h", "hpp",
+                    "cs", "php", "go", "rs", "swift", "rb", "scala", "clj", "hs",
+                    "json", "xml", "yaml", "yml", "properties", "gradle", "kts",
+                    "md", "txt", "log", "sql", "sh", "bat", "ps1"
+                )
+                
+                if (fileExtension !in supportedExtensions) {
+                    viewModel.setError("Неподдерживаемый формат файла. Поддерживаются только текстовые файлы с кодом.")
+                    return@let
+                }
+                
+                val inputStream = context.contentResolver.openInputStream(fileUri)
+                val content = inputStream?.use { stream ->
+                    BufferedReader(InputStreamReader(stream)).use { reader ->
+                        reader.readText()
+                    }
+                } ?: ""
+                
+                // Проверяем размер файла (лимит ~21,000 символов для YandexGPT)
+                val maxFileSize = 21000
+                if (content.length > maxFileSize) {
+                    viewModel.setError("Файл слишком большой (${content.length} символов). Максимальный размер: $maxFileSize символов.")
+                    return@let
+                }
+                
+                // Проверяем, что файл не пустой
+                if (content.trim().isEmpty()) {
+                    viewModel.setError("Выбранный файл пуст.")
+                    return@let
+                }
+                
                 viewModel.attachFile(content, fileName)
+                
             } catch (e: Exception) {
-                // Обработка ошибки чтения файла
+                viewModel.setError("Ошибка при чтении файла: ${e.message}")
             }
         }
     }
